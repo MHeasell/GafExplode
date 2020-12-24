@@ -1,0 +1,42 @@
+install:
+  - ps: Update-AppveyorBuild -Version "$($(git describe --abbrev=0).subString(1)).$env:APPVEYOR_BUILD_NUMBER"
+  - git submodule update --init --recursive
+before_build:
+  - nuget restore
+build:
+  project: GafExplode.sln
+after_build:
+  - COPY packages\Newtonsoft.Json.12.0.3\LICENSE.md LICENSE.Newtonsoft.Json.12.0.3.txt
+  - COPY README.md README.txt
+  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode.Gui\bin\%CONFIGURATION%\* LICENSE.txt LICENSE.Newtonsoft.Json.12.0.3.txt LICENSE.Ookii.Dialogs.WinForms.1.2.0.txt README.txt screenshot.png
+
+artifacts:
+  - path: GafExplode-$(APPVEYOR_BUILD_VERSION)-$(CONFIGURATION).zip
+    name: GafExplode
+
+assembly_info:
+  patch: true
+  file: 'GafExplode\Properties\AssemblyInfo.cs;GafExplode.Gui\Properties\AssemblyInfo.cs'
+  assembly_version: "{version}"
+  assembly_file_version: "{version}"
+
+deploy:
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  draft: true
+  provider: GitHub
+  auth_token:
+    secure: aWN3A6E34q2fL1nOsn5joPFEvWzGTJ9ahFNCd+r8QonQRVslcob1l7t64kXoZaTg
+  artifact: GafExplode
+  on:
+    APPVEYOR_REPO_TAG: true
+    configuration: Release
+
+configuration:
+  - Debug
+  - Release
+
+environment:
+  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+matrix:
+  fast_finish: true
