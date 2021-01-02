@@ -1,5 +1,6 @@
 install:
   - ps: Update-AppveyorBuild -Version "$($(git describe --abbrev=0).subString(1)).$env:APPVEYOR_BUILD_NUMBER"
+  - git submodule update --init --recursive
 before_build:
   - nuget restore
 after_build:
