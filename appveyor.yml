@@ -7,7 +7,8 @@ build:
   project: GafExplode.sln
 after_build:
   - COPY packages\Newtonsoft.Json.12.0.3\LICENSE.md LICENSE.Newtonsoft.Json.12.0.3.txt
-  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode.Gui\bin\%CONFIGURATION%\* LICENSE.txt LICENSE.Newtonsoft.Json.12.0.3.txt LICENSE.Ookii.Dialogs.WinForms.1.2.0.txt
+  - COPY README.md README.txt
+  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode.Gui\bin\%CONFIGURATION%\* LICENSE.txt LICENSE.Newtonsoft.Json.12.0.3.txt LICENSE.Ookii.Dialogs.WinForms.1.2.0.txt README.txt screenshot.png
 
 artifacts:
   - path: GafExplode-$(APPVEYOR_BUILD_VERSION)-$(CONFIGURATION).zip
