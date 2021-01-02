@@ -1,0 +1,38 @@
+install:
+  #- git submodule update --init --recursive
+  - ps: Update-AppveyorBuild -Version "$(git describe --dirty=-d)-$env:APPVEYOR_BUILD_NUMBER"
+before_build:
+  - nuget restore
+after_build:
+  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode\bin\%CONFIGURATION%\*
+
+artifacts:
+  - path: GafExplode-$(APPVEYOR_BUILD_VERSION)-$(CONFIGURATION).zip
+    name: GafExplode
+
+assembly_info:
+  patch: true
+  file: AssemblyInfo.cs
+  assembly_version: "{version}"
+  assembly_file_version: "{version}"
+
+deploy:
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  draft: true
+  provider: GitHub
+  auth_token:
+    secure: glwd3HCPhB64nX2++Co5BhN4vEwqEILuPQG0puwWoFpKTFd21iphYt8Z2QsNiAV1
+  artifact: GafExplode
+  on:
+    APPVEYOR_REPO_TAG: true
+    configuration: Release
+
+configuration:
+  - Debug
+  - Release
+
+environment:
+  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+matrix:
+  fast_finish: true
