@@ -14,7 +14,7 @@ artifacts:
 
 assembly_info:
   patch: true
-  file: AssemblyInfo.cs
+  file: 'GafExplode\Properties\AssemblyInfo.cs;GafExplode.Gui\Properties\AssemblyInfo.cs'
   assembly_version: "{version}"
   assembly_file_version: "{version}"
 
