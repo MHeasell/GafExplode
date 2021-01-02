@@ -50,7 +50,6 @@ namespace GafExplode
             {
                 var frameJson = new GafFrameJson
                 {
-                    TransparencyIndex = data.TransparencyIndex,
                     Duration = entry.Duration,
                     Unknown3 = data.Unknown3,
 
@@ -63,6 +62,7 @@ namespace GafExplode
                 {
                     frameJson.OriginX = data.OriginX;
                     frameJson.OriginY = data.OriginY;
+                    frameJson.TransparencyIndex = data.TransparencyIndex;
                 }
                 entries.Last().Frames.Add(frameJson);
             }
