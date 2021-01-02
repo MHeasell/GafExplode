@@ -6,7 +6,7 @@ before_build:
 build:
   project: GafExplode.sln
 after_build:
-  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode.Gui\bin\%CONFIGURATION%\*
+  - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode.Gui\bin\%CONFIGURATION%\* LICENSE.txt
 
 artifacts:
   - path: GafExplode-$(APPVEYOR_BUILD_VERSION)-$(CONFIGURATION).zip
