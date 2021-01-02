@@ -126,6 +126,8 @@ namespace GafExplode.Gui
             // 
             // statusStrip
             // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel});
             this.statusStrip.Location = new System.Drawing.Point(0, 278);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(564, 22);
