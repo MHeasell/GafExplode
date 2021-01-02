@@ -2,7 +2,7 @@ install:
   - ps: Update-AppveyorBuild -Version "$($(git describe --abbrev=0).subString(1)).$env:APPVEYOR_BUILD_NUMBER"
   - git submodule update --init --recursive
 before_build:
-  - nuget restore
+  - nuget restore GafExplode
 after_build:
   - 7z a GafExplode-%APPVEYOR_BUILD_VERSION%-%CONFIGURATION%.zip %APPVEYOR_BUILD_FOLDER%\GafExplode\bin\%CONFIGURATION%\*
 
