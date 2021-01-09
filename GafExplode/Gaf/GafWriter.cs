@@ -10,7 +10,6 @@ namespace GafExplode.Gaf
         public long Pointer { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
-        public bool Compress { get; set; }
         public int TransparencyIndex { get; set; }
     }
 
@@ -50,10 +49,9 @@ namespace GafExplode.Gaf
             foreach (var imageInfo in source.EnumerateImageInfos())
             {
                 var pos = writer.BaseStream.Position;
-                var compressed = this.WriteImage(imageInfo);
+                CompressedFrameWriter.WriteCompressedImage(new MemoryStream(imageInfo.Data), this.writer, imageInfo.Width, (byte)imageInfo.TransparencyIndex);
                 writtenImageInfos.Add(new WrittenImageInfo
                 {
-                    Compress = compressed,
                     Height = imageInfo.Height,
                     Width = imageInfo.Width,
                     TransparencyIndex = imageInfo.TransparencyIndex,
@@ -132,28 +130,6 @@ namespace GafExplode.Gaf
             writer.BaseStream.Seek(currPos, SeekOrigin.Begin);
         }
 
-        /// <summary>
-        /// Writes image data to stream.
-        /// Returns true if the image was compressed.
-        /// </summary>
-        private bool WriteImage(GafImageInfo data)
-        {
-            var buffer = new MemoryStream();
-            var tempWriter = new BinaryWriter(buffer, Encoding.UTF8, true);
-            var compressedData = buffer.ToArray();
-            CompressedFrameWriter.WriteCompressedImage(new MemoryStream(data.Data), tempWriter, data.Width, (byte)data.TransparencyIndex);
-            if (compressedData.Length < data.Data.Length)
-            {
-                writer.Write(buffer.ToArray());
-                return true;
-            }
-            else
-            {
-                writer.Write(data.Data);
-                return false;
-            }
-        }
-
         private void WriteLayerInfo(List<WrittenImageInfo> imageInfos, GafLayerInfo info)
         {
             var imageInfo = imageInfos[info.ImageIndex];
@@ -168,7 +144,7 @@ namespace GafExplode.Gaf
                 LayerCount = 0,
                 Width = (ushort)imageInfo.Width,
                 Height = (ushort)imageInfo.Height,
-                Compressed = imageInfo.Compress,
+                Compressed = true,
                 TransparencyIndex = (byte)imageInfo.TransparencyIndex,
                 PtrFrameData = (uint)imageInfo.Pointer,
             };
@@ -192,7 +168,7 @@ namespace GafExplode.Gaf
                 header.OriginY = (short)info.PosY;
                 header.Width = (ushort)imageInfo.Width;
                 header.Height = (ushort)imageInfo.Height;
-                header.Compressed = imageInfo.Compress;
+                header.Compressed = true;
                 header.TransparencyIndex = (byte)imageInfo.TransparencyIndex;
                 header.PtrFrameData = (uint)imageInfo.Pointer;
             }
