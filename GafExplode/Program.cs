@@ -23,9 +23,16 @@ namespace GafExplode
             }
         }
 
+        private static Color[] LoadPalette()
+        {
+            var exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            var palette = Palette.Read(Path.Combine(exePath, "PALETTE.PAL"));
+            return palette;
+        }
+
         public static void ExplodeGaf(string filename, string directoryName)
         {
-            var palette = Palette.Read("PALETTE.PAL");
+            var palette = LoadPalette();
             var adapter = new GafReaderAdapter(directoryName, idx => palette[idx]);
             using (var reader = new Gaf.GafReader(filename, adapter))
             {
@@ -36,7 +43,7 @@ namespace GafExplode
         public static void UnexplodeGaf(string directoryName, string filename)
         {
             var reversePalette = new Dictionary<Color, byte>();
-            var palette = Palette.Read("PALETTE.PAL");
+            var palette = LoadPalette();
             for (var i = 0; i < palette.Length; ++i)
             {
                 // TA palette has some duplicate colors in it - just use the first one
