@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using System.Drawing;
-using TAUtil.Gdi.Bitmap;
 using GafExplode.Json;
+using System;
 
 namespace GafExplode
 {
@@ -44,11 +44,11 @@ namespace GafExplode
 
     public class DirectoryGafSource : IGafSource
     {
-        private static GafImageInfo GetImageInfo(string filename, int transparencyIndex)
+        private static GafImageInfo GetImageInfo(string filename, int transparencyIndex, Func<Color, byte> paletteLookup)
         {
             using (var bmp = new Bitmap(filename))
             {
-                var data = BitmapConvert.ToBytes(bmp);
+                var data = BitmapConvert.ToBytes(bmp, paletteLookup);
                 return new GafImageInfo
                 {
                     Data = data,
@@ -58,18 +58,19 @@ namespace GafExplode
                 };
             }
         }
-        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GetImageInfos(string directoryName, GafFrameJson frame)
+
+        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GetImageInfos(string directoryName, GafFrameJson frame, Func<Color, byte> paletteLookup)
         {
             if (frame.ImageFileName != null)
             {
-                var info = GetImageInfo(Path.Combine(directoryName, frame.ImageFileName), frame.TransparencyIndex.Value);
+                var info = GetImageInfo(Path.Combine(directoryName, frame.ImageFileName), frame.TransparencyIndex.Value, paletteLookup);
                 yield return new KeyValuePair<string, GafImageInfo>(frame.ImageFileName, info);
             }
             else
             {
                 foreach (var layer in frame.Layers)
                 {
-                    var info = GetImageInfo(Path.Combine(directoryName, layer.ImageFileName), layer.TransparencyIndex);
+                    var info = GetImageInfo(Path.Combine(directoryName, layer.ImageFileName), layer.TransparencyIndex, paletteLookup);
                     yield return new KeyValuePair<string, GafImageInfo>(layer.ImageFileName, info);
                 }
             }
@@ -95,14 +96,14 @@ namespace GafExplode
             return (deduplicatedList, itemsByKey);
         }
 
-        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GenerateImageInfos(string directoryName, List<GafSequenceJson> entries)
+        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GenerateImageInfos(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
         {
-            return entries.SelectMany(entry => entry.Frames.SelectMany(frame => GetImageInfos(directoryName, frame)));
+            return entries.SelectMany(entry => entry.Frames.SelectMany(frame => GetImageInfos(directoryName, frame, paletteLookup)));
         }
 
-        private static ImageInfoDatabase GenerateImageInfoDatabase(string directoryName, List<GafSequenceJson> entries)
+        private static ImageInfoDatabase GenerateImageInfoDatabase(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
         {
-            var (images, imagesByFilename) = Deduplicate(GenerateImageInfos(directoryName, entries), new GafImageInfoComparer());
+            var (images, imagesByFilename) = Deduplicate(GenerateImageInfos(directoryName, entries, paletteLookup), new GafImageInfoComparer());
             return new ImageInfoDatabase { Items = images, ItemsByKey = imagesByFilename };
         }
 
@@ -149,10 +150,10 @@ namespace GafExplode
         private readonly List<GafSequenceJson> entries;
         private readonly ImageInfoDatabase imageDb;
 
-        public DirectoryGafSource(string directoryName)
+        public DirectoryGafSource(string directoryName, Func<Color, byte> paletteLookup)
         {
             this.entries = JsonConvert.DeserializeObject<List<GafSequenceJson>>(File.ReadAllText(Path.Combine(directoryName, "gaf.json")));
-            this.imageDb = GenerateImageInfoDatabase(directoryName, this.entries);
+            this.imageDb = GenerateImageInfoDatabase(directoryName, this.entries, paletteLookup);
         }
 
         public IEnumerable<GafEntryInfo> EnumerateEntries()
