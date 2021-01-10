@@ -32,14 +32,15 @@ namespace GafExplode
         }
     }
 
-    class ImageInfoDatabase : ItemDatabase<string, GafImageInfo>
+    class ImageInfoDatabase : ItemDatabase<string, GafImageInfo, Point>
     {
     }
 
-    class ItemDatabase<TKey, T>
+    class ItemDatabase<TKey, T, TMapping>
     {
         public List<T> Items { get; set; }
         public Dictionary<TKey, int> ItemsByKey { get; set; }
+        public Dictionary<TKey, TMapping> MappingsByKey { get; set; }
     }
 
     public class DirectoryGafSource : IGafSource
@@ -76,6 +77,33 @@ namespace GafExplode
             }
         }
 
+        private static (List<T>, Dictionary<TKey, int>, Dictionary<TKey, TMapping>) TransformAndDeduplicate<TKey, T, TMapping>(
+            IEnumerable<KeyValuePair<TKey, T>> items,
+            Func<T, (T, TMapping)> transformer,
+            IEqualityComparer<T> equalityComparer
+        )
+        {
+            var deduplicatedList = new List<T>();
+            var itemsByValue = new Dictionary<T, int>(equalityComparer);
+            var itemsByKey = new Dictionary<TKey, int>();
+            var mappingsByKey = new Dictionary<TKey, TMapping>();
+
+            foreach (var pair in items)
+            {
+                var (transformedValue, mapping) = transformer(pair.Value);
+                if (!itemsByValue.TryGetValue(transformedValue, out var index))
+                {
+                    index = deduplicatedList.Count;
+                    deduplicatedList.Add(transformedValue);
+                    itemsByValue.Add(transformedValue, index);
+                }
+                itemsByKey.Add(pair.Key, index);
+                mappingsByKey.Add(pair.Key, mapping);
+            }
+
+            return (deduplicatedList, itemsByKey, mappingsByKey);
+        }
+
         private static (List<T>, Dictionary<TKey, int>) Deduplicate<TKey, T>(IEnumerable<KeyValuePair<TKey, T>> items, IEqualityComparer<T> equalityComparer)
         {
             var deduplicatedList = new List<T>();
@@ -103,21 +131,28 @@ namespace GafExplode
 
         private static ImageInfoDatabase GenerateImageInfoDatabase(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
         {
-            var (images, imagesByFilename) = Deduplicate(GenerateImageInfos(directoryName, entries, paletteLookup), new GafImageInfoComparer());
-            return new ImageInfoDatabase { Items = images, ItemsByKey = imagesByFilename };
+            var (images, imagesByFilename, mappingsByFilename) = TransformAndDeduplicate(
+                GenerateImageInfos(directoryName, entries, paletteLookup),
+                imageInfo =>
+                {
+                    var rect = Util.ComputeMinBoundingRect(imageInfo);
+                    return (Util.TrimImageInfo(imageInfo, rect), new Point(-rect.X, -rect.Y));
+                },
+                new GafImageInfoComparer());
+            return new ImageInfoDatabase { Items = images, ItemsByKey = imagesByFilename, MappingsByKey = mappingsByFilename };
         }
 
-        private static GafLayerInfo GenerateLayerInfoFromFrame(Dictionary<string, int> imageInfoLookup, GafLayerJson layer)
+        private static GafLayerInfo GenerateLayerInfoFromFrame(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, GafLayerJson layer)
         {
             return new GafLayerInfo {
                 ImageIndex = imageInfoLookup[layer.ImageFileName],
-                OriginX = layer.OriginX,
-                OriginY = layer.OriginY,
+                OriginX = layer.OriginX + originMappingLookup[layer.ImageFileName].X,
+                OriginY = layer.OriginY + originMappingLookup[layer.ImageFileName].Y,
                 Unknown3 = layer.Unknown3,
             };
         }
 
-        private static GafFrameInfo GenerateLayerInfosFromFrame(Dictionary<string, int> imageInfoLookup, GafFrameJson frame)
+        private static GafFrameInfo GenerateLayerInfosFromFrame(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, GafFrameJson frame)
         {
             var info = new GafFrameInfo
             {
@@ -127,23 +162,23 @@ namespace GafExplode
 
             if (frame.ImageFileName == null)
             {
-                info.Layers = frame.Layers.Select(x => GenerateLayerInfoFromFrame(imageInfoLookup, x)).ToList();
+                info.Layers = frame.Layers.Select(x => GenerateLayerInfoFromFrame(imageInfoLookup, originMappingLookup, x)).ToList();
             }
             else
             {
-                info.OriginX = frame.OriginX;
-                info.OriginY = frame.OriginY;
+                info.OriginX = frame.OriginX + originMappingLookup[frame.ImageFileName].X;
+                info.OriginY = frame.OriginY + originMappingLookup[frame.ImageFileName].Y;
                 info.ImageIndex = imageInfoLookup[frame.ImageFileName];
             }
 
             return info;
         }
 
-        private static IEnumerable<GafEntryInfo> GenerateGafSequences(Dictionary<string, int> imageInfoLookup, List<GafSequenceJson> entries)
+        private static IEnumerable<GafEntryInfo> GenerateGafSequences(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, List<GafSequenceJson> entries)
         {
             return entries.Select(entry => new GafEntryInfo {
                 Name = entry.Name,
-                FrameInfos = entry.Frames.Select(frame => GenerateLayerInfosFromFrame(imageInfoLookup, frame)).ToList(),
+                FrameInfos = entry.Frames.Select(frame => GenerateLayerInfosFromFrame(imageInfoLookup, originMappingLookup, frame)).ToList(),
             });
         }
 
@@ -158,7 +193,7 @@ namespace GafExplode
 
         public IEnumerable<GafEntryInfo> EnumerateSequences()
         {
-            return GenerateGafSequences(this.imageDb.ItemsByKey, this.sequences);
+            return GenerateGafSequences(this.imageDb.ItemsByKey, this.imageDb.MappingsByKey, this.sequences);
         }
 
         public IEnumerable<GafImageInfo> EnumerateImageInfos()

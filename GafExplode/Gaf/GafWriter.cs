@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO;
-using System;
 
 namespace GafExplode.Gaf
 {
@@ -11,8 +9,6 @@ namespace GafExplode.Gaf
         public long Pointer { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
-        public int AdjustedOriginX { get; set; }
-        public int AdjustedOriginY { get; set; }
         public int TransparencyIndex { get; set; }
     }
 
@@ -51,19 +47,13 @@ namespace GafExplode.Gaf
             var writtenImageInfos = new List<WrittenImageInfo>();
             foreach (var imageInfo in source.EnumerateImageInfos())
             {
-                // FIXME: images not deduped anymore... either move the dedupe here
-                // or move the image trimming code out!
                 var pos = writer.BaseStream.Position;
-                var rect = Util.ComputeMinBoundingRect(imageInfo);
-                var smallerImageInfo = Util.TrimImageInfo(imageInfo, rect);
-                CompressedFrameWriter.WriteCompressedImage(new MemoryStream(smallerImageInfo.Data), this.writer, smallerImageInfo.Width, (byte)smallerImageInfo.TransparencyIndex);
+                CompressedFrameWriter.WriteCompressedImage(new MemoryStream(imageInfo.Data), this.writer, imageInfo.Width, (byte)imageInfo.TransparencyIndex);
                 writtenImageInfos.Add(new WrittenImageInfo
                 {
-                    Height = smallerImageInfo.Height,
-                    Width = smallerImageInfo.Width,
-                    AdjustedOriginX = -rect.X,
-                    AdjustedOriginY = -rect.Y,
-                    TransparencyIndex = smallerImageInfo.TransparencyIndex,
+                    Width = imageInfo.Width,
+                    Height = imageInfo.Height,
+                    TransparencyIndex = imageInfo.TransparencyIndex,
                     Pointer = pos
                 });
             }
@@ -145,8 +135,8 @@ namespace GafExplode.Gaf
 
             var header = new Structures.GafFrameInfo
             {
-                OriginX = (short)(info.OriginX + imageInfo.AdjustedOriginX),
-                OriginY = (short)(info.OriginY + imageInfo.AdjustedOriginY),
+                OriginX = (short)info.OriginX,
+                OriginY = (short)info.OriginY,
                 Unknown2 = 0,
                 Unknown3 = (uint)info.Unknown3, // Cavedog gafs sometimes have a value here but we don't know what it does.
 
@@ -173,8 +163,8 @@ namespace GafExplode.Gaf
             {
                 var imageInfo = imageInfos[info.ImageIndex.Value];
                 header.LayerCount = 0;
-                header.OriginX = (short)(info.OriginX + imageInfo.AdjustedOriginX);
-                header.OriginY = (short)(info.OriginY + imageInfo.AdjustedOriginY);
+                header.OriginX = (short)info.OriginX;
+                header.OriginY = (short)info.OriginY;
                 header.Width = (ushort)imageInfo.Width;
                 header.Height = (ushort)imageInfo.Height;
                 header.Compressed = true;
@@ -185,8 +175,8 @@ namespace GafExplode.Gaf
             {
                 var rect = info.Layers.Select(layer => new Rect
                 {
-                    X = -(layer.OriginX + imageInfos[layer.ImageIndex].AdjustedOriginX),
-                    Y = -(layer.OriginY + imageInfos[layer.ImageIndex].AdjustedOriginY),
+                    X = -layer.OriginX,
+                    Y = -layer.OriginY,
                     Width = imageInfos[layer.ImageIndex].Width,
                     Height = imageInfos[layer.ImageIndex].Height
                 }).Aggregate(Rect.Merge);
