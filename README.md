@@ -22,7 +22,14 @@ To explode a GAF file to a directory:
 
 To unexplode a directory to a GAF file:
 
-    GafExplode.exe explode my_gaf.gaf my_gaf_dir
+    GafExplode.exe unexplode my_gaf_dir my_gaf.gaf
+
+
+There are also some additional command line forms:
+- `unexplode-quantize` -- unexplode but with nearest-neighbour
+  image quantization
+- `unexplode-no-trim` -- unexplode but with image trimming disabled
+- `explode-no-pad` -- explode but with image padding disabled
 
 # Directory Structure
 
@@ -38,15 +45,18 @@ These images are referenced by the `gaf.json` file.
 
 * GAF Explode can explode and unexplode GAF files like FX.GAF that are
   normally problematic for other tools such as GAF Builder.
-* GAF Explode compresses GAF frames automatically if the compression
-  would save space. This may prevent easy interoperability with GAF
-  Builder, as GAF Builder does not handle compressed frames correctly.
-  Sorry.
+* GAF Explode always compresses GAF frames.
+  It has been found that TA shows visual artifacts on some GAFs
+  when they are saved uncompressed, so we never use uncompressed.
 * Images must be in PNG format and must use only colours from the Total
   Annihilation colour palette. However they don't have to be indexed
   colour PNGs, they can be normal 24 or 32 bit files.
-* The colour palette is built in and there is no way to supply a custom
-  palette. If you care about changing the palette please get in touch.
+  If you don't want to do the colour conversion yourself,
+  GAF Explode can do a very basic nearest-neighbur conversion --
+  just tick the checkbox before unexploding.
+* If you use a custom colour palette in your mod you can overwrite
+  the provided PALETTE.PAL with your custom one and GAF Explode
+  will use it.
 * Did you know that each frame in a GAF sequence can be displayed for a
   different amount of time? GAF Explode exposes a `Duration` field on
   each frame that controls this. A duration of 1 means that the frame
@@ -56,5 +66,19 @@ These images are referenced by the `gaf.json` file.
   [GAF format notes][gaf-fmt] published at Visual Designs. Lots of GAF
   frames have this set to a non-zero value but no-one knows what it does,
   if anything. If you do discover what this does please get in touch.
+* When exploding, you can optionally have GAF Explode insert padding
+  into images so that all the images in a sequence are the same size.
+  Turn this off if you want to see the exact raw images contained
+  in the GAF.
+* Similarly when unexploding you can optionally have GAF Explode trim
+  transparent colour from the borders of your images and automatically
+  tweak the frame / layer origins to match.
+  This makes the final GAF file smaller.
+  You should probably always leave this on unless you discover some
+  reason reason why you need to turn it off.
+  For example, there might be somewhere in the game that doesn't respect
+  the frame origin coordinates, and you really want to make the image
+  appear lower by padding it with transparent colour at the top.
+  Please let me know if you do encounter such an issue.
 
 [gaf-fmt]: http://visualta.tauniverse.com/Downloads/ta-gaf-fmt.txt
