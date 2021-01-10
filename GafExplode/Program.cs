@@ -20,6 +20,14 @@ namespace GafExplode
                 var directoryName = args[2];
 
                 ExplodeGaf(filename, directoryName);
+                PadImages(directoryName);
+            }
+            else if (args[0] == "explode-no-pad")
+            {
+                var filename = args[1];
+                var directoryName = args[2];
+
+                ExplodeGaf(filename, directoryName);
             }
             else if (args[0] == "unexplode-quantize")
             {
@@ -38,11 +46,6 @@ namespace GafExplode
                 var directoryName = args[1];
                 var filename = args[2];
                 UnexplodeGaf(directoryName, filename, false, false);
-            }
-            else if(args[0] == "pad-images")
-            {
-                var directoryName = args[1];
-                PadImages(directoryName);
             }
         }
 
