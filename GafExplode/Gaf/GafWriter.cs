@@ -26,7 +26,7 @@ namespace GafExplode.Gaf
 
         public void Write()
         {
-            var entries = source.EnumerateEntries().ToList();
+            var entries = source.EnumerateSequences().ToList();
 
             var header = new Structures.GafHeader
             {

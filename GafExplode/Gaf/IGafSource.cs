@@ -39,7 +39,7 @@ namespace GafExplode.Gaf
 
     public interface IGafSource
     {
-        IEnumerable<GafEntryInfo> EnumerateEntries();
+        IEnumerable<GafEntryInfo> EnumerateSequences();
 
         IEnumerable<GafImageInfo> EnumerateImageInfos();
     }

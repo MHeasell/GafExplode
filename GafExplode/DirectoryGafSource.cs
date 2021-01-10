@@ -139,7 +139,7 @@ namespace GafExplode
             return info;
         }
 
-        private static IEnumerable<GafEntryInfo> GenerateGafEntries(Dictionary<string, int> imageInfoLookup, List<GafSequenceJson> entries)
+        private static IEnumerable<GafEntryInfo> GenerateGafSequences(Dictionary<string, int> imageInfoLookup, List<GafSequenceJson> entries)
         {
             return entries.Select(entry => new GafEntryInfo {
                 Name = entry.Name,
@@ -147,18 +147,18 @@ namespace GafExplode
             });
         }
 
-        private readonly List<GafSequenceJson> entries;
+        private readonly List<GafSequenceJson> sequences;
         private readonly ImageInfoDatabase imageDb;
 
         public DirectoryGafSource(string directoryName, Func<Color, byte> paletteLookup)
         {
-            this.entries = JsonConvert.DeserializeObject<List<GafSequenceJson>>(File.ReadAllText(Path.Combine(directoryName, "gaf.json")));
-            this.imageDb = GenerateImageInfoDatabase(directoryName, this.entries, paletteLookup);
+            this.sequences = JsonConvert.DeserializeObject<List<GafSequenceJson>>(File.ReadAllText(Path.Combine(directoryName, "gaf.json")));
+            this.imageDb = GenerateImageInfoDatabase(directoryName, this.sequences, paletteLookup);
         }
 
-        public IEnumerable<GafEntryInfo> EnumerateEntries()
+        public IEnumerable<GafEntryInfo> EnumerateSequences()
         {
-            return GenerateGafEntries(this.imageDb.ItemsByKey, this.entries);
+            return GenerateGafSequences(this.imageDb.ItemsByKey, this.sequences);
         }
 
         public IEnumerable<GafImageInfo> EnumerateImageInfos()
