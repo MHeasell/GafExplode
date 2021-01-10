@@ -111,8 +111,8 @@ namespace GafExplode
         {
             return new GafLayerInfo {
                 ImageIndex = imageInfoLookup[layer.ImageFileName],
-                PosX = layer.OriginX,
-                PosY = layer.OriginY,
+                OriginX = layer.OriginX,
+                OriginY = layer.OriginY,
                 Unknown3 = layer.Unknown3,
             };
         }
@@ -131,8 +131,8 @@ namespace GafExplode
             }
             else
             {
-                info.PosX = frame.OriginX;
-                info.PosY = frame.OriginY;
+                info.OriginX = frame.OriginX;
+                info.OriginY = frame.OriginY;
                 info.ImageIndex = imageInfoLookup[frame.ImageFileName];
             }
 

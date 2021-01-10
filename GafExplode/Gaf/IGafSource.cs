@@ -14,16 +14,16 @@ namespace GafExplode.Gaf
 
         public long Unknown3 { get; set; }
 
-        public int? PosX { get; set; }
-        public int? PosY { get; set; }
+        public int? OriginX { get; set; }
+        public int? OriginY { get; set; }
         public int? ImageIndex { get; set; }
         public List<GafLayerInfo> Layers { get; set; }
     }
 
     public struct GafLayerInfo
     {
-        public int PosX { get; set; }
-        public int PosY { get; set; }
+        public int OriginX { get; set; }
+        public int OriginY { get; set; }
         public int ImageIndex { get; set; }
 
         public long Unknown3 { get; set; }
