@@ -54,8 +54,8 @@ namespace GafExplode.Gaf
                 // FIXME: images not deduped anymore... either move the dedupe here
                 // or move the image trimming code out!
                 var pos = writer.BaseStream.Position;
-                var rect = ComputeMinBoundingRect(imageInfo);
-                var smallerImageInfo = TrimImageInfo(imageInfo, rect);
+                var rect = Util.ComputeMinBoundingRect(imageInfo);
+                var smallerImageInfo = Util.TrimImageInfo(imageInfo, rect);
                 CompressedFrameWriter.WriteCompressedImage(new MemoryStream(smallerImageInfo.Data), this.writer, smallerImageInfo.Width, (byte)smallerImageInfo.TransparencyIndex);
                 writtenImageInfos.Add(new WrittenImageInfo
                 {
@@ -87,57 +87,6 @@ namespace GafExplode.Gaf
 
             // reset seek pos forward to after the last byte we wrote
             writer.BaseStream.Seek(currPos, SeekOrigin.Begin);
-        }
-
-        private static GafImageInfo TrimImageInfo(GafImageInfo imageInfo, Rect rect)
-        {
-            var newData = new byte[rect.Width * rect.Height];
-            for (var y = 0; y < rect.Height; ++y)
-            {
-                for (var x = 0; x < rect.Width; ++x)
-                {
-                    var sourceY = rect.Y + y;
-                    var sourceX = rect.X + x;
-                    newData[(y * rect.Width) + x] = imageInfo.Data[(sourceY * imageInfo.Width) + sourceX];
-                }
-            }
-            return new GafImageInfo
-            {
-                Data = newData,
-                Width = rect.Width,
-                Height = rect.Height,
-                TransparencyIndex = imageInfo.TransparencyIndex
-            };
-        }
-
-        private static IEnumerable<int> BackwardsRange(int start, int count)
-        {
-            for (var i = start + count - 1; i >= start; --i)
-            {
-                yield return i;
-            }
-        }
-
-        private Rect ComputeMinBoundingRect(GafImageInfo imageInfo)
-        {
-            // FIXME: this will blow up if the image is entirely blank
-            var top = Enumerable.Range(0, imageInfo.Height)
-                .First(y => Enumerable.Range(0, imageInfo.Width)
-                    .Any(x => imageInfo.Data[(y * imageInfo.Width) + x] != imageInfo.TransparencyIndex));
-
-            var left = Enumerable.Range(0, imageInfo.Width)
-                .First(x => Enumerable.Range(0, imageInfo.Height)
-                    .Any(y => imageInfo.Data[(y * imageInfo.Width) + x] != imageInfo.TransparencyIndex));
-
-            var bottom = BackwardsRange(0, imageInfo.Height)
-                .First(y => Enumerable.Range(0, imageInfo.Width)
-                    .Any(x => imageInfo.Data[(y * imageInfo.Width) + x] != imageInfo.TransparencyIndex));
-
-            var right = BackwardsRange(0, imageInfo.Width)
-                .First(x => Enumerable.Range(0, imageInfo.Height)
-                    .Any(y => imageInfo.Data[(y * imageInfo.Width) + x] != imageInfo.TransparencyIndex));
-
-            return new Rect(left, top, right - left + 1, bottom - top + 1);
         }
 
         private void WriteGafEntry(List<WrittenImageInfo> imageInfos, GafEntryInfo entryInfo)
