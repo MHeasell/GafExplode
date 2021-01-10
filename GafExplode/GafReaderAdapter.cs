@@ -15,13 +15,6 @@ namespace GafExplode
         private readonly string outputDirectory;
         private readonly Func<int, Color> paletteLookup;
 
-        /// <summary>
-        /// If true, we pad the dimensions of layers so that all the layers are the same
-        /// size as the frame.
-        /// If false we extract the raw images with no padding.
-        /// </summary>
-        private readonly bool padLayers = true;
-
         public List<GafSequenceJson> entries = new List<GafSequenceJson>();
 
         private Gaf.Structures.GafFrameInfo currentFrameInfo;
@@ -54,14 +47,11 @@ namespace GafExplode
 
                 var layerJson = new GafLayerJson
                 {
+                    OriginX = data.OriginX,
+                    OriginY = data.OriginY,
                     TransparencyIndex = data.TransparencyIndex,
                     Unknown3 = data.Unknown3,
                 };
-                if (!padLayers)
-                {
-                    layerJson.OriginX = data.OriginX;
-                    layerJson.OriginY = data.OriginY;
-                }
                 entries.Last().Frames.Last().Layers.Add(layerJson);
             }
             else
@@ -98,10 +88,6 @@ namespace GafExplode
 
             if (frameDepth > 1)
             {
-                var frameInfo = entries.Last().Frames.Last();
-                var layerInfo = frameInfo.Layers.Last();
-                var originX = this.currentLayerInfo.OriginX - this.currentFrameInfo.OriginX;
-                var originY = this.currentLayerInfo.OriginY - this.currentFrameInfo.OriginY;
                 var layerNumber = entries.Last().Frames.Last().Layers.Count;
                 var relativePath = Path.Combine($"{sequenceNumber:D2}_{sequenceName}", $"{sequenceName}_{frameNumber:D2}_{layerNumber:D2}.png");
                 entries.Last().Frames.Last().Layers.Last().ImageFileName = relativePath;
@@ -109,34 +95,18 @@ namespace GafExplode
 
                 using (var bitmap = BitmapConvert.ToBitmap(data, this.currentLayerInfo.Width, this.currentLayerInfo.Height, this.paletteLookup))
                 {
-                    if (padLayers)
-                    {
-                        using (var frameBitmap = new Bitmap(this.currentFrameInfo.Width, this.currentFrameInfo.Height))
-                        {
-                            using (var graphics = Graphics.FromImage(frameBitmap))
-                            {
-                                using (var brush = new SolidBrush(paletteLookup(this.currentLayerInfo.TransparencyIndex)))
-                                {
-                                    graphics.FillRectangle(brush, 0, 0, frameBitmap.Size.Width, frameBitmap.Size.Height);
-                                }
-                                graphics.DrawImage(bitmap, new Point(-originX, -originY));
-                            }
-                            frameBitmap.Save(fullPath, ImageFormat.Png);
-                        }
-                    }
-                    else
-                    {
-                        bitmap.Save(fullPath, ImageFormat.Png);
-                    }
+                    bitmap.Save(fullPath, ImageFormat.Png);
                 }
             }
             else
             {
+                var relativePath = Path.Combine($"{sequenceNumber:D2}_{sequenceName}", $"{sequenceName:D2}_{frameNumber:D2}.png");
+                entries.Last().Frames.Last().ImageFileName = relativePath;
+                var fullPath = Path.Combine(outputDirectory, relativePath);
+
                 using (var bitmap = BitmapConvert.ToBitmap(data, this.currentFrameInfo.Width, this.currentFrameInfo.Height, this.paletteLookup))
                 {
-                    var relativePath = Path.Combine($"{sequenceNumber:D2}_{sequenceName}", $"{sequenceName:D2}_{frameNumber:D2}.png");
-                    entries.Last().Frames.Last().ImageFileName = relativePath;
-                    bitmap.Save(Path.Combine(outputDirectory, relativePath), ImageFormat.Png);
+                    bitmap.Save(fullPath, ImageFormat.Png);
                 }
             }
 
