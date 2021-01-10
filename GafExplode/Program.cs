@@ -24,7 +24,13 @@ namespace GafExplode
             {
                 var directoryName = args[1];
                 var filename = args[2];
-                UnexplodeGaf(directoryName, filename);
+                UnexplodeGaf(directoryName, filename, true);
+            }
+            else if (args[0] == "unexplode-no-trim")
+            {
+                var directoryName = args[1];
+                var filename = args[2];
+                UnexplodeGaf(directoryName, filename, false);
             }
             else if(args[0] == "pad-frames")
             {
@@ -50,7 +56,7 @@ namespace GafExplode
             }
         }
 
-        public static void UnexplodeGaf(string directoryName, string filename)
+        public static void UnexplodeGaf(string directoryName, string filename, bool trimFrames)
         {
             var reversePalette = new Dictionary<Color, byte>();
             var palette = LoadPalette();
@@ -65,7 +71,7 @@ namespace GafExplode
 
             using (var writer = new BinaryWriter(File.OpenWrite(filename)))
             {
-                var source = new DirectoryGafSource(directoryName, color => reversePalette[color]);
+                var source = new DirectoryGafSource(directoryName, color => reversePalette[color], trimFrames);
                 var gafWriter = new Gaf.GafWriter(writer, source);
                 gafWriter.Write();
             }

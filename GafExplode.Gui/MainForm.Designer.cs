@@ -39,6 +39,7 @@ namespace GafExplode.Gui
             this.unexplodeButton = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.trimCheckbox = new System.Windows.Forms.CheckBox();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -140,11 +141,25 @@ namespace GafExplode.Gui
             this.statusLabel.Size = new System.Drawing.Size(39, 17);
             this.statusLabel.Text = "Ready";
             // 
+            // trimCheckbox
+            // 
+            this.trimCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.trimCheckbox.AutoSize = true;
+            this.trimCheckbox.Checked = true;
+            this.trimCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.trimCheckbox.Location = new System.Drawing.Point(15, 252);
+            this.trimCheckbox.Name = "trimCheckbox";
+            this.trimCheckbox.Size = new System.Drawing.Size(156, 17);
+            this.trimCheckbox.TabIndex = 9;
+            this.trimCheckbox.Text = "Trim empty space in images";
+            this.trimCheckbox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(564, 300);
+            this.Controls.Add(this.trimCheckbox);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.unexplodeButton);
             this.Controls.Add(this.explodeButton);
@@ -175,6 +190,7 @@ namespace GafExplode.Gui
         private System.Windows.Forms.Button unexplodeButton;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
+        private System.Windows.Forms.CheckBox trimCheckbox;
     }
 }
 

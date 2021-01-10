@@ -129,14 +129,21 @@ namespace GafExplode
             return entries.SelectMany(entry => entry.Frames.SelectMany(frame => GetImageInfos(directoryName, frame, paletteLookup)));
         }
 
-        private static ImageInfoDatabase GenerateImageInfoDatabase(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
+        private static ImageInfoDatabase GenerateImageInfoDatabase(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup, bool trimFrames)
         {
             var (images, imagesByFilename, mappingsByFilename) = TransformAndDeduplicate(
                 GenerateImageInfos(directoryName, entries, paletteLookup),
                 imageInfo =>
                 {
-                    var rect = Util.ComputeMinBoundingRect(imageInfo);
-                    return (Util.TrimImageInfo(imageInfo, rect), new Point(-rect.X, -rect.Y));
+                    if (trimFrames)
+                    {
+                        var rect = Util.ComputeMinBoundingRect(imageInfo);
+                        return (Util.TrimImageInfo(imageInfo, rect), new Point(-rect.X, -rect.Y));
+                    }
+                    else
+                    {
+                        return (imageInfo, new Point(0, 0));
+                    }
                 },
                 new GafImageInfoComparer());
             return new ImageInfoDatabase { Items = images, ItemsByKey = imagesByFilename, MappingsByKey = mappingsByFilename };
@@ -185,10 +192,10 @@ namespace GafExplode
         private readonly List<GafSequenceJson> sequences;
         private readonly ImageInfoDatabase imageDb;
 
-        public DirectoryGafSource(string directoryName, Func<Color, byte> paletteLookup)
+        public DirectoryGafSource(string directoryName, Func<Color, byte> paletteLookup, bool trimFrames)
         {
             this.sequences = JsonConvert.DeserializeObject<List<GafSequenceJson>>(File.ReadAllText(Path.Combine(directoryName, "gaf.json")));
-            this.imageDb = GenerateImageInfoDatabase(directoryName, this.sequences, paletteLookup);
+            this.imageDb = GenerateImageInfoDatabase(directoryName, this.sequences, paletteLookup, trimFrames);
         }
 
         public IEnumerable<GafEntryInfo> EnumerateSequences()

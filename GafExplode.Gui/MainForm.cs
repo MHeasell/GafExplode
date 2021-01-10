@@ -81,7 +81,7 @@ namespace GafExplode.Gui
             try
             {
                 var tempFile = Path.GetTempFileName();
-                GafExplode.Program.UnexplodeGaf(this.directoryTextBox.Text, tempFile);
+                GafExplode.Program.UnexplodeGaf(this.directoryTextBox.Text, tempFile, this.trimCheckbox.Checked);
                 File.Move(tempFile, this.gafFileTextBox.Text);
             }
             catch (Exception ex)
