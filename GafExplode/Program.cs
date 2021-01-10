@@ -1,6 +1,7 @@
 ﻿using GafExplode.Gaf;
 using GafExplode.Json;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -20,22 +21,28 @@ namespace GafExplode
 
                 ExplodeGaf(filename, directoryName);
             }
+            else if (args[0] == "unexplode-quantize")
+            {
+                var directoryName = args[1];
+                var filename = args[2];
+                UnexplodeGaf(directoryName, filename, true, true);
+            }
             else if (args[0] == "unexplode")
             {
                 var directoryName = args[1];
                 var filename = args[2];
-                UnexplodeGaf(directoryName, filename, true);
+                UnexplodeGaf(directoryName, filename, true, false);
             }
             else if (args[0] == "unexplode-no-trim")
             {
                 var directoryName = args[1];
                 var filename = args[2];
-                UnexplodeGaf(directoryName, filename, false);
+                UnexplodeGaf(directoryName, filename, false, false);
             }
-            else if(args[0] == "pad-frames")
+            else if(args[0] == "pad-images")
             {
                 var directoryName = args[1];
-                PadFrames(directoryName);
+                PadImages(directoryName);
             }
         }
 
@@ -56,7 +63,7 @@ namespace GafExplode
             }
         }
 
-        public static void UnexplodeGaf(string directoryName, string filename, bool trimFrames)
+        public static void UnexplodeGaf(string directoryName, string filename, bool trimFrames, bool quantize)
         {
             var reversePalette = new Dictionary<Color, byte>();
             var palette = LoadPalette();
@@ -71,10 +78,48 @@ namespace GafExplode
 
             using (var writer = new BinaryWriter(File.OpenWrite(filename)))
             {
-                var source = new DirectoryGafSource(directoryName, color => reversePalette[color], trimFrames);
+                var source = new DirectoryGafSource(directoryName, color =>  quantize ? (byte)GetNearest(reversePalette, palette, color) : reversePalette[color], trimFrames);
                 var gafWriter = new Gaf.GafWriter(writer, source);
                 gafWriter.Write();
             }
+        }
+
+        private static int GetNearest(Dictionary<Color, byte> reverse, Color[] arr, Color c)
+        {
+            if (reverse.TryGetValue(c, out var i))
+            {
+                return i;
+            }
+            return GetNearest(arr, c);
+        }
+
+        private static T MinBy<T, U>(IEnumerable<T> source, Func<T, U> keySelector)
+        {
+            var minElem = source.First();
+            var minKey = keySelector(minElem);
+            foreach (var elem in source.Skip(1))
+            {
+                var key = keySelector(elem);
+                if (Comparer<U>.Default.Compare(key, minKey) < 0)
+                {
+                    minElem = elem;
+                    minKey = key;
+                }
+            }
+            return minElem;
+        }
+
+        private static int GetNearest(Color[] arr, Color c)
+        {
+            return MinBy(Enumerable.Range(0, arr.Length), i => DistanceSquared(arr[i], c));
+        }
+
+        private static int DistanceSquared(Color c1, Color c2)
+        {
+            var dr = c2.R - c1.R;
+            var dg = c2.G - c1.G;
+            var db = c2.B - c1.B;
+            return (dr * dr) + (dg * dg) + (db * db);
         }
 
         private static IEnumerable<Rect> EnumerateRects(string directoryName, GafSequenceJson sequence)
@@ -101,7 +146,7 @@ namespace GafExplode
             }
         }
 
-        public static void PadFrames(string directoryName)
+        public static void PadImages(string directoryName)
         {
             var reversePalette = new Dictionary<Color, byte>();
             var palette = LoadPalette();
@@ -113,7 +158,6 @@ namespace GafExplode
                     reversePalette[palette[i]] = (byte)i;
                 }
             }
-
 
             var gafJsonPath = Path.Combine(directoryName, "gaf.json");
             var sequences = JsonConvert.DeserializeObject<List<GafSequenceJson>>(File.ReadAllText(gafJsonPath));

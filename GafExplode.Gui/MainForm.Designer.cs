@@ -40,6 +40,8 @@ namespace GafExplode.Gui
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.trimCheckbox = new System.Windows.Forms.CheckBox();
+            this.padCheckbox = new System.Windows.Forms.CheckBox();
+            this.quantizeCheckbox = new System.Windows.Forms.CheckBox();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -117,7 +119,7 @@ namespace GafExplode.Gui
             // 
             this.unexplodeButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.unexplodeButton.Location = new System.Drawing.Point(12, 183);
+            this.unexplodeButton.Location = new System.Drawing.Point(12, 220);
             this.unexplodeButton.Name = "unexplodeButton";
             this.unexplodeButton.Size = new System.Drawing.Size(540, 62);
             this.unexplodeButton.TabIndex = 7;
@@ -129,7 +131,7 @@ namespace GafExplode.Gui
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusLabel});
-            this.statusStrip.Location = new System.Drawing.Point(0, 278);
+            this.statusStrip.Location = new System.Drawing.Point(0, 315);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(564, 22);
             this.statusStrip.TabIndex = 8;
@@ -147,18 +149,43 @@ namespace GafExplode.Gui
             this.trimCheckbox.AutoSize = true;
             this.trimCheckbox.Checked = true;
             this.trimCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.trimCheckbox.Location = new System.Drawing.Point(15, 252);
+            this.trimCheckbox.Location = new System.Drawing.Point(15, 289);
             this.trimCheckbox.Name = "trimCheckbox";
-            this.trimCheckbox.Size = new System.Drawing.Size(156, 17);
+            this.trimCheckbox.Size = new System.Drawing.Size(227, 17);
             this.trimCheckbox.TabIndex = 9;
-            this.trimCheckbox.Text = "Trim empty space in images";
+            this.trimCheckbox.Text = "Optimize file size by trimming image borders";
             this.trimCheckbox.UseVisualStyleBackColor = true;
+            // 
+            // padCheckbox
+            // 
+            this.padCheckbox.AutoSize = true;
+            this.padCheckbox.Checked = true;
+            this.padCheckbox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.padCheckbox.Location = new System.Drawing.Point(15, 154);
+            this.padCheckbox.Name = "padCheckbox";
+            this.padCheckbox.Size = new System.Drawing.Size(218, 17);
+            this.padCheckbox.TabIndex = 10;
+            this.padCheckbox.Text = "Pad image borders with transparent color";
+            this.padCheckbox.UseVisualStyleBackColor = true;
+            // 
+            // quantizeCheckbox
+            // 
+            this.quantizeCheckbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.quantizeCheckbox.AutoSize = true;
+            this.quantizeCheckbox.Location = new System.Drawing.Point(248, 289);
+            this.quantizeCheckbox.Name = "quantizeCheckbox";
+            this.quantizeCheckbox.Size = new System.Drawing.Size(239, 17);
+            this.quantizeCheckbox.TabIndex = 11;
+            this.quantizeCheckbox.Text = "Quantize images to palette (nearest neighbor)";
+            this.quantizeCheckbox.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(564, 300);
+            this.ClientSize = new System.Drawing.Size(564, 337);
+            this.Controls.Add(this.quantizeCheckbox);
+            this.Controls.Add(this.padCheckbox);
             this.Controls.Add(this.trimCheckbox);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.unexplodeButton);
@@ -191,6 +218,8 @@ namespace GafExplode.Gui
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
         private System.Windows.Forms.CheckBox trimCheckbox;
+        private System.Windows.Forms.CheckBox padCheckbox;
+        private System.Windows.Forms.CheckBox quantizeCheckbox;
     }
 }
 

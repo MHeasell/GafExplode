@@ -52,6 +52,12 @@ namespace GafExplode.Gui
             try
             {
                 GafExplode.Program.ExplodeGaf(this.gafFileTextBox.Text, this.directoryTextBox.Text);
+                if (this.padCheckbox.Checked)
+                {
+                    this.statusLabel.Text = "Padding images...";
+                    this.Refresh();
+                    GafExplode.Program.PadImages(this.directoryTextBox.Text);
+                }
             }
             catch (Exception ex)
             {
@@ -81,7 +87,7 @@ namespace GafExplode.Gui
             try
             {
                 var tempFile = Path.GetTempFileName();
-                GafExplode.Program.UnexplodeGaf(this.directoryTextBox.Text, tempFile, this.trimCheckbox.Checked);
+                GafExplode.Program.UnexplodeGaf(this.directoryTextBox.Text, tempFile, this.trimCheckbox.Checked, this.quantizeCheckbox.Checked);
                 File.Move(tempFile, this.gafFileTextBox.Text);
             }
             catch (Exception ex)
