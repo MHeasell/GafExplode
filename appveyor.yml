@@ -25,7 +25,7 @@ deploy:
   draft: true
   provider: GitHub
   auth_token:
-    secure: aWN3A6E34q2fL1nOsn5joPFEvWzGTJ9ahFNCd+r8QonQRVslcob1l7t64kXoZaTg
+    secure: cndkkTbLd/hiHvOosdbA2dlRFG/aeWsA/Ynpw2yHZa8Xo3knF16onviXZZaQqxP/
   artifact: GafExplode
   on:
     APPVEYOR_REPO_TAG: true
