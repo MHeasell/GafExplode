@@ -167,7 +167,13 @@ namespace GafExplode
 
             foreach (var sequence in sequences)
             {
-                var rect = EnumerateRects(directoryName, sequence).Aggregate(Rect.Merge);
+                var sourceRects = EnumerateRects(directoryName, sequence).ToList();
+                if (sourceRects.Count == 0)
+                {
+                    continue;
+                }
+
+                var rect = sourceRects.Aggregate(Rect.Merge);
 
                 foreach (var frame in sequence.Frames)
                 {
