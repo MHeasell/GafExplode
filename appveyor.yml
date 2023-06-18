@@ -25,7 +25,7 @@ deploy:
   draft: true
   provider: GitHub
   auth_token:
-    secure: cndkkTbLd/hiHvOosdbA2dlRFG/aeWsA/Ynpw2yHZa8Xo3knF16onviXZZaQqxP/
+    secure: yx4JtFec2AV9Du5jwwsPj5mNcZYvC1bteP18RJuPGvvoGPeRxqsikUNYRSvLqFoZ8/jTT6YzuV69ScxkSuzBuKgDXoFwJyGobJHCH6NdtTZ4CwHMRAlxJaWLW62KxAK5
   artifact: GafExplode
   on:
     APPVEYOR_REPO_TAG: true
@@ -36,7 +36,7 @@ configuration:
   - Release
 
 environment:
-  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
 
 matrix:
   fast_finish: true
