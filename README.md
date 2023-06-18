@@ -45,9 +45,11 @@ These images are referenced by the `gaf.json` file.
 
 * GAF Explode can explode and unexplode GAF files like FX.GAF that are
   normally problematic for other tools such as GAF Builder.
-* GAF Explode always compresses GAF frames.
-  It has been found that TA shows visual artifacts on some GAFs
-  when they are saved uncompressed, so we never use uncompressed.
+* GAF Explode allows you to toggle the compression of each frame.
+  Textures for 3DO models must always be saved uncompressed. For other
+  types of GAFs it is recommended to save them compressed, as it has been
+  found that TA shows visual artifacts on some GAFs when they are saved
+  uncompressed.
 * Images must be in PNG format and must use only colours from the Total
   Annihilation colour palette. However they don't have to be indexed
   colour PNGs, they can be normal 24 or 32 bit files.
