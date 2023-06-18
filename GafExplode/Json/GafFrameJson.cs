@@ -19,6 +19,8 @@ namespace GafExplode.Json
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? TransparencyIndex { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Compress { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ImageFileName { get; set; }
     }
 }

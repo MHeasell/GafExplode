@@ -34,6 +34,7 @@ namespace GafExplode.Gaf
         public int Width { get; set; }
         public int Height { get; set; }
         public int TransparencyIndex { get; set; }
+        public bool Compress { get; set; }
         public byte[] Data { get; set; }
     }
 

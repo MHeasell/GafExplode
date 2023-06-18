@@ -8,6 +8,9 @@
         public long Unknown3 { get; set; }
 
         public int TransparencyIndex { get; set; }
+
+        public bool Compress { get; set; }
+
         public string ImageFileName { get; set; }
     }
 }

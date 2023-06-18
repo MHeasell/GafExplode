@@ -10,6 +10,7 @@ namespace GafExplode.Gaf
         public int Width { get; set; }
         public int Height { get; set; }
         public int TransparencyIndex { get; set; }
+        public bool Compressed { get; set; }
     }
 
     class GafWriter
@@ -48,12 +49,20 @@ namespace GafExplode.Gaf
             foreach (var imageInfo in source.EnumerateImageInfos())
             {
                 var pos = writer.BaseStream.Position;
-                CompressedFrameWriter.WriteCompressedImage(new MemoryStream(imageInfo.Data), this.writer, imageInfo.Width, (byte)imageInfo.TransparencyIndex);
+                if (imageInfo.Compress)
+                {
+                    CompressedFrameWriter.WriteCompressedImage(new MemoryStream(imageInfo.Data), this.writer, imageInfo.Width, (byte)imageInfo.TransparencyIndex);
+                }
+                else
+                {
+                    writer.Write(imageInfo.Data);
+                }
                 writtenImageInfos.Add(new WrittenImageInfo
                 {
                     Width = imageInfo.Width,
                     Height = imageInfo.Height,
                     TransparencyIndex = imageInfo.TransparencyIndex,
+                    Compressed = imageInfo.Compress,
                     Pointer = pos
                 });
             }
@@ -167,7 +176,7 @@ namespace GafExplode.Gaf
                 header.OriginY = (short)info.OriginY;
                 header.Width = (ushort)imageInfo.Width;
                 header.Height = (ushort)imageInfo.Height;
-                header.Compressed = true;
+                header.Compressed = imageInfo.Compressed;
                 header.TransparencyIndex = (byte)imageInfo.TransparencyIndex;
                 header.PtrFrameData = (uint)imageInfo.Pointer;
             }

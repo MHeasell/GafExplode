@@ -73,6 +73,7 @@ namespace GafExplode
                     frameJson.OriginX = data.OriginX;
                     frameJson.OriginY = data.OriginY;
                     frameJson.TransparencyIndex = data.TransparencyIndex;
+                    frameJson.Compress = data.Compressed;
                 }
                 entries.Last().Frames.Add(frameJson);
             }

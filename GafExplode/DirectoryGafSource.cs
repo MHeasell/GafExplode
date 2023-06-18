@@ -16,6 +16,7 @@ namespace GafExplode
             return x.Width == y.Width
                 && x.Height == y.Height
                 && x.TransparencyIndex == y.TransparencyIndex
+                && x.Compress == y.Compress
                 && x.Data.SequenceEqual(y.Data);
         }
 
@@ -24,6 +25,7 @@ namespace GafExplode
             var hashCode = o.Width.GetHashCode();
             hashCode = hashCode * 17 + o.Height.GetHashCode();
             hashCode = hashCode * 17 + o.TransparencyIndex.GetHashCode();
+            hashCode = hashCode * 17 + o.Compress.GetHashCode();
             foreach (var d in o.Data)
             {
                 hashCode = hashCode * 17 + d.GetHashCode();
@@ -32,7 +34,38 @@ namespace GafExplode
         }
     }
 
-    class ImageInfoDatabase : ItemDatabase<string, GafImageInfo, Point>
+    struct ImageInfoKey
+    {
+        string FileName { get; set; }
+        int TransparencyIndex { get; set; }
+        bool Compress { get; set; }
+
+        public ImageInfoKey(string fileName, int transparencyIndex, bool compress)
+        {
+            this.FileName = fileName;
+            this.TransparencyIndex = transparencyIndex;
+            this.Compress = compress;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is ImageInfoKey key
+                && this.FileName == key.FileName
+                && this.TransparencyIndex == key.TransparencyIndex
+                && this.Compress == key.Compress;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -362860870;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.FileName);
+            hashCode = hashCode * -1521134295 + this.TransparencyIndex.GetHashCode();
+            hashCode = hashCode * -1521134295 + this.Compress.GetHashCode();
+            return hashCode;
+        }
+    }
+
+    class ImageInfoDatabase : ItemDatabase<ImageInfoKey, GafImageInfo, Point>
     {
     }
 
@@ -45,7 +78,7 @@ namespace GafExplode
 
     public class DirectoryGafSource : IGafSource
     {
-        private static GafImageInfo GetImageInfo(string filename, int transparencyIndex, Func<Color, byte> paletteLookup)
+        private static GafImageInfo GetImageInfo(string filename, int transparencyIndex, bool compress, Func<Color, byte> paletteLookup)
         {
             using (var bmp = new Bitmap(filename))
             {
@@ -56,23 +89,24 @@ namespace GafExplode
                     Height = bmp.Height,
                     Width = bmp.Width,
                     TransparencyIndex = transparencyIndex,
+                    Compress = compress,
                 };
             }
         }
 
-        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GetImageInfos(string directoryName, GafFrameJson frame, Func<Color, byte> paletteLookup)
+        private static IEnumerable<KeyValuePair<ImageInfoKey, GafImageInfo>> GetImageInfos(string directoryName, GafFrameJson frame, Func<Color, byte> paletteLookup)
         {
             if (frame.ImageFileName != null)
             {
-                var info = GetImageInfo(Path.Combine(directoryName, frame.ImageFileName), frame.TransparencyIndex.Value, paletteLookup);
-                yield return new KeyValuePair<string, GafImageInfo>(frame.ImageFileName, info);
+                var info = GetImageInfo(Path.Combine(directoryName, frame.ImageFileName), frame.TransparencyIndex.Value, frame.Compress.Value, paletteLookup);
+                yield return new KeyValuePair<ImageInfoKey, GafImageInfo>(new ImageInfoKey(frame.ImageFileName, frame.TransparencyIndex.Value, frame.Compress.Value), info);
             }
             else
             {
                 foreach (var layer in frame.Layers)
                 {
-                    var info = GetImageInfo(Path.Combine(directoryName, layer.ImageFileName), layer.TransparencyIndex, paletteLookup);
-                    yield return new KeyValuePair<string, GafImageInfo>(layer.ImageFileName, info);
+                    var info = GetImageInfo(Path.Combine(directoryName, layer.ImageFileName), layer.TransparencyIndex, layer.Compress, paletteLookup);
+                    yield return new KeyValuePair<ImageInfoKey, GafImageInfo>(new ImageInfoKey(layer.ImageFileName, layer.TransparencyIndex, layer.Compress), info);
                 }
             }
         }
@@ -124,7 +158,7 @@ namespace GafExplode
             return (deduplicatedList, itemsByKey);
         }
 
-        private static IEnumerable<KeyValuePair<string, GafImageInfo>> GenerateImageInfos(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
+        private static IEnumerable<KeyValuePair<ImageInfoKey, GafImageInfo>> GenerateImageInfos(string directoryName, List<GafSequenceJson> entries, Func<Color, byte> paletteLookup)
         {
             return entries.SelectMany(entry => entry.Frames.SelectMany(frame => GetImageInfos(directoryName, frame, paletteLookup)));
         }
@@ -149,17 +183,18 @@ namespace GafExplode
             return new ImageInfoDatabase { Items = images, ItemsByKey = imagesByFilename, MappingsByKey = mappingsByFilename };
         }
 
-        private static GafLayerInfo GenerateLayerInfoFromFrame(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, GafLayerJson layer)
+        private static GafLayerInfo GenerateLayerInfoFromFrame(Dictionary<ImageInfoKey, int> imageInfoLookup, Dictionary<ImageInfoKey, Point> originMappingLookup, GafLayerJson layer)
         {
+            var key = new ImageInfoKey(layer.ImageFileName, layer.TransparencyIndex, layer.Compress);
             return new GafLayerInfo {
-                ImageIndex = imageInfoLookup[layer.ImageFileName],
-                OriginX = layer.OriginX + originMappingLookup[layer.ImageFileName].X,
-                OriginY = layer.OriginY + originMappingLookup[layer.ImageFileName].Y,
+                ImageIndex = imageInfoLookup[key],
+                OriginX = layer.OriginX + originMappingLookup[key].X,
+                OriginY = layer.OriginY + originMappingLookup[key].Y,
                 Unknown3 = layer.Unknown3,
             };
         }
 
-        private static GafFrameInfo GenerateLayerInfosFromFrame(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, GafFrameJson frame)
+        private static GafFrameInfo GenerateLayerInfosFromFrame(Dictionary<ImageInfoKey, int> imageInfoLookup, Dictionary<ImageInfoKey, Point> originMappingLookup, GafFrameJson frame)
         {
             var info = new GafFrameInfo
             {
@@ -173,15 +208,16 @@ namespace GafExplode
             }
             else
             {
-                info.OriginX = frame.OriginX + originMappingLookup[frame.ImageFileName].X;
-                info.OriginY = frame.OriginY + originMappingLookup[frame.ImageFileName].Y;
-                info.ImageIndex = imageInfoLookup[frame.ImageFileName];
+                var key = new ImageInfoKey(frame.ImageFileName, frame.TransparencyIndex.Value, frame.Compress.Value);
+                info.OriginX = frame.OriginX + originMappingLookup[key].X;
+                info.OriginY = frame.OriginY + originMappingLookup[key].Y;
+                info.ImageIndex = imageInfoLookup[key];
             }
 
             return info;
         }
 
-        private static IEnumerable<GafEntryInfo> GenerateGafSequences(Dictionary<string, int> imageInfoLookup, Dictionary<string, Point> originMappingLookup, List<GafSequenceJson> entries)
+        private static IEnumerable<GafEntryInfo> GenerateGafSequences(Dictionary<ImageInfoKey, int> imageInfoLookup, Dictionary<ImageInfoKey, Point> originMappingLookup, List<GafSequenceJson> entries)
         {
             return entries.Select(entry => new GafEntryInfo {
                 Name = entry.Name,
