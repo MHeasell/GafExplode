@@ -86,7 +86,8 @@ namespace GafExplode.Gaf
                 Data = newData,
                 Width = rect.Width,
                 Height = rect.Height,
-                TransparencyIndex = imageInfo.TransparencyIndex
+                TransparencyIndex = imageInfo.TransparencyIndex,
+                Compress = imageInfo.Compress
             };
         }
     }
